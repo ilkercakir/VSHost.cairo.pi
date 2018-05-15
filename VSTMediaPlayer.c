@@ -968,13 +968,8 @@ void listview_onRowActivated(GtkTreeView *treeview, GtkTreePath *path, GtkTreeVi
 	GtkTreeIter iter;
 	//gchar *s;
 
-	if (vpp->vpq.playerstatus==PAUSED)
-	{
-		requeststop_videoplayer(&(vpw->vp));
-		vpp->vpq.playerstatus = PLAYING;
-		gtk_button_set_label(GTK_BUTTON(vpw->button10), "Pause");
-		pthread_mutex_unlock(&(vpp->seekmutex));
-	}
+	press_vp_resume_button(plp); // Press resume if paused 
+	press_vp_stop_button(plp); // Press stop if playing
 
 //g_print("double-clicked\n");
 	model = gtk_tree_view_get_model(treeview);
@@ -983,10 +978,6 @@ void listview_onRowActivated(GtkTreeView *treeview, GtkTreePath *path, GtkTreeVi
 		//s=gtk_tree_path_to_string(path);
 		//printf("%s\n",s);
 		//g_free(s);
-		if (!(vpp->vpq.playerstatus == IDLE))
-		{
-			button2_clicked(vpw->button2, userdata);
-		}
 		if (vpp->now_playing)
 		{
 			g_free(vpp->now_playing);
@@ -995,8 +986,6 @@ void listview_onRowActivated(GtkTreeView *treeview, GtkTreePath *path, GtkTreeVi
 		gtk_tree_model_get(model, &iter, COL_FILEPATH, &(vpp->now_playing), -1);
 //g_print ("Double-clicked path %s\n", vpp->now_playing);
 
-		if (vpp->vpq.playerstatus!=IDLE)
-			button2_clicked(vpw->button2, userdata);
 		button1_clicked(vpw->button1, userdata);
 	}
 }
@@ -1334,11 +1323,6 @@ void init_videoplayerwidgets(playlistparams *plp, int playWidth, int playHeight)
 	gtk_widget_show_all(vpw->vpwindow);
 }
 
-void close_videoplayerwidgets(vpwidgets *vpw)
-{
-	gtk_widget_destroy(vpw->vpwindow);
-}
-
 void press_vp_stop_button(playlistparams *plp)
 {
 	vpwidgets *vpw = plp->vpw;
@@ -1367,4 +1351,14 @@ gboolean setnotebooktab1(gpointer data)
 
 	gtk_notebook_set_current_page(GTK_NOTEBOOK(vpw->notebook), 1);
 	return FALSE;
+}
+
+void close_videoplayerwidgets(playlistparams *plp)
+{
+	vpwidgets *vpw = plp->vpw;
+
+	press_vp_resume_button(plp); // Press resume if paused 
+	press_vp_stop_button(plp); // Press stop if playing
+
+	gtk_widget_destroy(vpw->vpwindow);
 }
