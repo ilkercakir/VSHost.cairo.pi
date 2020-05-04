@@ -186,8 +186,9 @@ int init_encoder(audioencoder *aen, char *filename, enum AVCodecID id, enum AVSa
 int encoder_encode(audioencoder *aen, char *inbuffer, int buffersize)
 {
 	AVPacket pkt;
-	int ret = 0, data_present;
-printf("write %d / %d\n", buffersize, aen->encoderbuffersize);
+	int ret = 0, data_present, i, j, frame_size;
+	
+//printf("write %d / %d\n", buffersize, aen->encoderbuffersize);
 	// write cq
 	int offset, bytesleft, bytestocopy, length;
 	for(offset=0,bytesleft=buffersize;bytesleft;bytesleft-=bytestocopy)
@@ -197,7 +198,7 @@ printf("write %d / %d\n", buffersize, aen->encoderbuffersize);
 		offset += bytestocopy;
 		aen->rear += bytestocopy; aen->rear %= aen->encoderbuffersize;
 	}
-printf("read %d / %d\n", aen->codecframesize, aen->frame->linesize[0]);
+//printf("read %d / %d\n", aen->codecframesize, aen->frame->linesize[0]);
 	// read cq
 	do
 	{
@@ -225,14 +226,22 @@ printf("read %d / %d\n", aen->codecframesize, aen->frame->linesize[0]);
 					aen->front += bytestocopy; aen->front %= aen->encoderbuffersize;
 				}
 
-				(signed short *)src = (signed short *)aen->codecbuffer;
-
-				for(i=0;i<aen->codeccontext->frame_size;i++)
+				if (av_sample_fmt_is_planar(aen->avformat))
 				{
-					for(j=0;j<aen->channels;j++)
+					frame_size = aen->codeccontext->frame_size;
+					signed short *src = (signed short *)aen->codecbuffer;
+					for(i=0;i<aen->channels;i++)
 					{
-						((signed short *)aen->frame->data[j])[i] = (signed short *)aen->codecbuffer[aen->channels*i+j];
+						signed short *dst = (signed short *)aen->frame->data[i];
+						for(j=0;j<frame_size;j++)
+						{
+							dst[j] = src[j*aen->channels+i];
+						}
 					}
+				}
+				else
+				{
+					memcpy(aen->frame->data[0], aen->codecbuffer, aen->codecframesize);
 				}
 
 				av_init_packet(&pkt);
@@ -281,7 +290,7 @@ int close_encoder(audioencoder *aen)
 	if (aen->codeccontext)
 	{
 		avcodec_close(aen->codeccontext);
-		avcodec_free_context(&(aen->codeccontext))en;
+		avcodec_free_context(&(aen->codeccontext));
 	}
 
 	if (aen->formatcontext)
@@ -295,4 +304,3 @@ int close_encoder(audioencoder *aen)
 	
 	return err;
 }
-	
