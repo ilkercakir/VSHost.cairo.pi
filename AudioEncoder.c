@@ -159,6 +159,7 @@ int init_encoder(audioencoder *aen, char *filename, enum AVCodecID id, enum AVSa
 									else
 									{
 										aen->codecframesize = aen->codeccontext->frame_size * aen->channels * ( snd_pcm_format_width(format) / 8 );
+										aen->codecbuffer = malloc(aen->codecframesize);
 										aen->encoderbuffersize = aen->codecframesize * 10;
 										aen->encoderbuffer = malloc(aen->encoderbuffersize);
 									}
@@ -215,14 +216,25 @@ printf("read %d / %d\n", aen->codecframesize, aen->frame->linesize[0]);
 			}
 			else
 			{
-				char *buffer = (char *)aen->frame->data[0];
+				//char *buffer = (char *)aen->frame->data[0];
 				for(offset=0,bytesleft=aen->codecframesize;bytesleft;bytesleft-=bytestocopy)
 				{
 					bytestocopy = (aen->front+bytesleft>aen->encoderbuffersize?aen->encoderbuffersize-aen->front:bytesleft);
-					memcpy(buffer+offset, aen->encoderbuffer+aen->front, bytestocopy);
+					memcpy(aen->codecbuffer+offset, aen->encoderbuffer+aen->front, bytestocopy);
 					offset += bytestocopy;
 					aen->front += bytestocopy; aen->front %= aen->encoderbuffersize;
 				}
+
+				(unsigned short *)src = (unsigned short *)aen->codecbuffer;
+
+				for(i=0;i<aen->codeccontext->frame_size;i++)
+				{
+					for(j=0;j<aen->channels;j++)
+					{
+						((unsigned short *)aen->frame->data[j])[i] = (unsigned short *)aen->codecbuffer[aen->channels*i+j];
+					}
+				}
+
 				av_init_packet(&pkt);
 				pkt.data = NULL; // packet data will be allocated by the encoder
 				pkt.size = 0;
@@ -269,7 +281,7 @@ int close_encoder(audioencoder *aen)
 	if (aen->codeccontext)
 	{
 		avcodec_close(aen->codeccontext);
-		avcodec_free_context(&(aen->codeccontext));
+		avcodec_free_context(&(aen->codeccontext))en;
 	}
 
 	if (aen->formatcontext)
@@ -278,6 +290,9 @@ int close_encoder(audioencoder *aen)
 	if (aen->iocontext)
 		avio_close(aen->iocontext);
 
+	free(aen->codecbuffer);
+	free(aen->encoderbuffer);
+	
 	return err;
 }
 	
