@@ -79,7 +79,7 @@ static gpointer audioout_thread0(gpointer args)
 			pthread_mutex_lock(ao->recordmutex);
 			if (ao->rstate == RS_RECORDING)
 			{
-				err=encoder_encode(&(ao->aen), ao->mx.outbuffer, ao->mx.outbufferframes);
+				err=encoder_encode(&(ao->aen), ao->mx.outbuffer, ao->mx.outbuffersize);
 				if (err<0)
 				{}
 			}
