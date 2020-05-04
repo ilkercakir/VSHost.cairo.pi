@@ -34,7 +34,7 @@ typedef struct
 	AVStream *stream;
 	AVIOContext *iocontext;
 
-	char *encoderbuffer;
+	char *codecbuffer, *encoderbuffer;
 	int encoderbuffersize, front, rear;
 	int codecframesize;
 	AVFrame *frame;
