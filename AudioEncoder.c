@@ -225,13 +225,13 @@ printf("read %d / %d\n", aen->codecframesize, aen->frame->linesize[0]);
 					aen->front += bytestocopy; aen->front %= aen->encoderbuffersize;
 				}
 
-				(unsigned short *)src = (unsigned short *)aen->codecbuffer;
+				(signed short *)src = (signed short *)aen->codecbuffer;
 
 				for(i=0;i<aen->codeccontext->frame_size;i++)
 				{
 					for(j=0;j<aen->channels;j++)
 					{
-						((unsigned short *)aen->frame->data[j])[i] = (unsigned short *)aen->codecbuffer[aen->channels*i+j];
+						((signed short *)aen->frame->data[j])[i] = (signed short *)aen->codecbuffer[aen->channels*i+j];
 					}
 				}
 
