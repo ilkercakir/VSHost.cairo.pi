@@ -158,7 +158,7 @@ int init_encoder(audioencoder *aen, char *filename, enum AVCodecID id, enum AVSa
 									}
 									else
 									{
-										aen->codecframesize = aen->codeccontext->frame_size * aen->channels * ( snd_pcm_format_width(format) / 8 );
+										aen->codecframesize = aen->codeccontext->frame_size * aen->channels * av_get_bytes_per_sample(aen->avformat);
 										aen->codecbuffer = malloc(aen->codecframesize);
 										aen->encoderbuffersize = aen->codecframesize * 10;
 										aen->encoderbuffer = malloc(aen->encoderbuffersize);
@@ -217,7 +217,6 @@ int encoder_encode(audioencoder *aen, char *inbuffer, int buffersize)
 			}
 			else
 			{
-				//char *buffer = (char *)aen->frame->data[0];
 				for(offset=0,bytesleft=aen->codecframesize;bytesleft;bytesleft-=bytestocopy)
 				{
 					bytestocopy = (aen->front+bytesleft>aen->encoderbuffersize?aen->encoderbuffersize-aen->front:bytesleft);
@@ -229,14 +228,31 @@ int encoder_encode(audioencoder *aen, char *inbuffer, int buffersize)
 				if (av_sample_fmt_is_planar(aen->avformat))
 				{
 					frame_size = aen->codeccontext->frame_size;
-					signed short *src = (signed short *)aen->codecbuffer;
-					for(i=0;i<aen->channels;i++)
+					switch (aen->avformat)
 					{
-						signed short *dst = (signed short *)aen->frame->data[i];
-						for(j=0;j<frame_size;j++)
-						{
-							dst[j] = src[j*aen->channels+i];
-						}
+						case AV_SAMPLE_FMT_S16P:
+							signed short *src = (signed short *)aen->codecbuffer;
+							for(i=0;i<aen->channels;i++)
+							{
+								signed short *dst = (signed short *)aen->frame->data[i];
+								for(j=0;j<frame_size;j++)
+								{
+									dst[j] = src[j*aen->channels+i];
+								}
+							}
+							break;
+						case AV_SAMPLE_FMT_FLTP:
+							float *srcf = (float *)aen->codecbuffer;
+							for(i=0;i<aen->channels;i++)
+							{
+								float *dstf = (float *)aen->frame->data[i];
+								for(j=0;j<frame_size;j++)
+								{
+									dstf[j] = srcf[j*aen->channels+i];
+								}
+							}
+							break;
+						default: break;
 					}
 				}
 				else
