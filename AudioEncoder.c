@@ -242,13 +242,13 @@ int encoder_encode(audioencoder *aen, char *inbuffer, int buffersize)
 							}
 							break;
 						case AV_SAMPLE_FMT_FLTP:
-							float *srcf = (float *)aen->codecbuffer;
+							signed short *srcf = (signed short *)aen->codecbuffer;
 							for(i=0;i<aen->channels;i++)
 							{
 								float *dstf = (float *)aen->frame->data[i];
 								for(j=0;j<frame_size;j++)
 								{
-									dstf[j] = srcf[j*aen->channels+i];
+									dstf[j] = (float)srcf[j*aen->channels+i];
 								}
 							}
 							break;
