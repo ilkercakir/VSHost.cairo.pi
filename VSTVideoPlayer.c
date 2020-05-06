@@ -136,6 +136,30 @@ void drain_videoplayer(videoplayer *v)
 	vq_drain(&(v->vpq));
 }
 
+double get_rotation(AVStream *st)
+{
+	AVDictionaryEntry *rotate_tag = av_dict_get(st->metadata, "rotate", NULL, 0);
+	uint8_t* displaymatrix = av_stream_get_side_data(st, AV_PKT_DATA_DISPLAYMATRIX, NULL);
+	double theta = 0;
+
+	if (rotate_tag && *rotate_tag->value && strcmp(rotate_tag->value, "0"))
+	{
+		char *tail;
+		theta = av_strtod(rotate_tag->value, &tail);
+		if (*tail)
+			theta = 0;
+	}
+	if (displaymatrix && !theta)
+		theta = -av_display_rotation_get((int32_t*) displaymatrix);
+
+	theta -= 360*floor(theta/360 + 0.9/360);
+
+	if (fabs(theta - 90*round(theta/90)) > 2)
+		av_log(NULL, AV_LOG_WARNING, "Odd rotation angle.\nIf you want to help, upload a sample of this file to ftp://upload.ffmpeg.org/incoming/ and contact the ffmpeg-devel mailing list. (ffmpeg-devel@ffmpeg.org)");
+
+	return theta;
+}
+ 
 int open_now_playing(videoplayer *v)
 {
 	int i;
@@ -148,9 +172,10 @@ int open_now_playing(videoplayer *v)
 	av_register_all();
 	avformat_network_init();
 
-	if(avformat_open_input(&(v->pFormatCtx), v->now_playing, NULL, NULL)!=0)
+	if((i=avformat_open_input(&(v->pFormatCtx), v->now_playing, NULL, NULL))!=0)
 	{
-		printf("avformat_open_input()\n");
+		av_strerror(i, err, sizeof(err));
+		printf("file %s\navformat_open_input error %d %s\n", v->now_playing, i, err);
 		return -1; // Couldn't open file
 	}
 
@@ -215,6 +240,8 @@ int open_now_playing(videoplayer *v)
 //printf("Frame rate = %2.2f\n", frame_rate);
 //printf("frametime = %d usec\n", frametime);
 //printf("Width : %d, Height : %d\n", v->pCodecCtx->coded_width, v->pCodecCtx->coded_height);
+		//double rotation = get_rotation(st);
+//printf("rotation %f\n", rotation);
 		v->videoduration = (v->pFormatCtx->duration / AV_TIME_BASE) * v->frame_rate; // in frames
 
 		switch(v->pCodecCtx->pix_fmt)
@@ -225,15 +252,16 @@ int open_now_playing(videoplayer *v)
 				v->yuvfmt = YUV422;
 				break;
 			case AV_PIX_FMT_YUV420P:
+			case AV_PIX_FMT_YUVJ420P:
 				v->yuvfmt = YUV420;
 				break;
 			case AV_PIX_FMT_RGBA:
-			case AV_PIX_FMT_YUVJ420P:
 			default:
 				v->yuvfmt = RGBA;
 				break;
 		}
 //printf("Pixel format %d\n", v->pCodecCtx->pix_fmt);
+
 	}
 	v->audioStream = -1;
 	for(i=0; i<v->pFormatCtx->nb_streams; i++)
@@ -355,6 +383,11 @@ void frame_reader_loop(videoplayer *v)
 		v->codecWidth = v->pCodecCtx->width;
 		v->codecHeight = v->pCodecCtx->height;
 	}
+	if ((!width) && (!height))
+	{
+		width = v->codedWidth = v->codecWidth;
+		height = v->codedHeight = v->codecHeight;
+	}
 
 	get_first_usec(&vt);
 	while ((av_read_frame(v->pFormatCtx, packet)>=0) && (!v->stoprequested))
@@ -382,7 +415,7 @@ void frame_reader_loop(videoplayer *v)
 						pFrameRGB = av_frame_alloc();
 						av_frame_unref(pFrameRGB);
 
-						get_first_usec(&vt);
+						//get_first_usec(&vt);
 
 						uint8_t *rgbbuffer = NULL;
 						int numBytes = avpicture_get_size(AV_PIX_FMT_RGB32, v->playerWidth, v->playerHeight);
@@ -399,11 +432,11 @@ void frame_reader_loop(videoplayer *v)
 						//printf("sws_scale done\n");
 						sws_freeContext(sws_ctx);
 
-						v->diff3=get_next_usec(&vt);
+						//v->diff3=get_next_usec(&vt);
 						//gdk_threads_add_idle(setLevel3, (void*)v->vpwp);
 
-						width = v->lineWidth = pFrameRGB->linesize[0] / 4;
-						height = v->playerHeight;
+						//width = v->lineWidth = pFrameRGB->linesize[0] / 4;
+						//height = v->playerHeight;
 						//printf("%d %d, %d %d\n", width, height, v->playerWidth, v->playerHeight);
 						rgba = malloc(pFrameRGB->linesize[0] * v->playerHeight);
 						//printf("malloc %d %d\n", pFrameRGB->linesize[0], playerHeight);
@@ -420,6 +453,8 @@ void frame_reader_loop(videoplayer *v)
 					{
 						switch(v->yuvfmt)
 						{
+							case RGBA:
+								break;
 							case YUV422:
 								width = v->lineWidth = pFrame->linesize[0];
 								rgba = malloc(width*height*2);
@@ -431,10 +466,12 @@ void frame_reader_loop(videoplayer *v)
 							default:
 								width = v->lineWidth = pFrame->linesize[0];
 								rgba = malloc(width * height*3/2);
+
 								memcpy(&rgba[0], pFrame->data[0], width*height); //y
 								memcpy(&rgba[width*height], pFrame->data[1], width*height/4); //u
 								memcpy(&rgba[width*height*5/4], pFrame->data[2], width*height/4); //v
 //printf("linesizes %d %d %d\n", pFrame->linesize[0], pFrame->linesize[1], pFrame->linesize[2]);
+								break;
 						}
 					}
 

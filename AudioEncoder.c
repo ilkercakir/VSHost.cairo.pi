@@ -3,8 +3,9 @@
 int check_sample_fmt(const AVCodec *codec, enum AVSampleFormat sample_fmt)
 {
     const enum AVSampleFormat *p = codec->sample_fmts;
-    while (*p != AV_SAMPLE_FMT_NONE) {
-printf("%d\n", *p);
+    while (*p != AV_SAMPLE_FMT_NONE)
+    {
+//printf("%d\n", *p);
         if (*p == sample_fmt)
             return 1;
         p++;
@@ -12,8 +13,23 @@ printf("%d\n", *p);
     return 0;
 }
 
+int select_sample_rate(AVCodec *codec)
+{
+	const int *p;
+
+	p = codec->supported_samplerates;
+    while (*p)
+    {
+//printf("%d\n", *p);
+        p++;
+    }
+    return 0;
+}
+
 int init_encoder(audioencoder *aen, char *filename, enum AVCodecID id, enum AVSampleFormat avformat, snd_pcm_format_t format, unsigned int rate, unsigned int channels, int64_t bit_rate)
 {
+	int err;
+
 	aen->format = format;
 	aen->rate = rate;
 	aen->channels = channels;
@@ -30,7 +46,7 @@ int init_encoder(audioencoder *aen, char *filename, enum AVCodecID id, enum AVSa
 	aen->encoderbuffer = NULL;
 	aen->front = aen->rear = 0;
 
-	int err;
+	aen->pts = 0;
 
 	/* register all the codecs */
 	av_register_all();
@@ -92,6 +108,8 @@ int init_encoder(audioencoder *aen, char *filename, enum AVCodecID id, enum AVSa
 				}
 				else
 				{
+					//select_sample_rate(aen->codec);
+					
 					aen->codeccontext->channels = aen->channels;
 					aen->codeccontext->channel_layout = av_get_default_channel_layout(aen->channels);
 					aen->codeccontext->sample_rate = aen->rate;
@@ -127,6 +145,21 @@ int init_encoder(audioencoder *aen, char *filename, enum AVCodecID id, enum AVSa
 						}
 						else
 						{
+//printf("extradata_size %d\n", aen->codeccontext->extradata_size);
+							if (!aen->stream->codecpar->extradata && aen->codeccontext->extradata)
+							{
+								aen->stream->codecpar->extradata = av_malloc(aen->codeccontext->extradata_size + FF_INPUT_BUFFER_PADDING_SIZE);
+								if (!aen->stream->codecpar->extradata)
+								{
+									printf("Could not allocate extradata buffer to copy parser data.\n");
+								}
+								else
+								{ 
+									aen->stream->codecpar->extradata_size = aen->codeccontext->extradata_size;
+									memcpy(aen->stream->codecpar->extradata, aen->codeccontext->extradata, aen->codeccontext->extradata_size);
+								}
+							}
+
 							/* Write the header of the output file container. */
 							if ((err = avformat_write_header(aen->formatcontext, NULL)) < 0)
 							{
@@ -158,7 +191,7 @@ int init_encoder(audioencoder *aen, char *filename, enum AVCodecID id, enum AVSa
 									}
 									else
 									{
-										aen->codecframesize = aen->codeccontext->frame_size * aen->channels * av_get_bytes_per_sample(aen->avformat);
+										aen->codecframesize = aen->codeccontext->frame_size * aen->channels * ( snd_pcm_format_width(format) / 8 );
 										aen->codecbuffer = malloc(aen->codecframesize);
 										aen->encoderbuffersize = aen->codecframesize * 10;
 										aen->encoderbuffer = malloc(aen->encoderbuffersize);
@@ -187,7 +220,7 @@ int encoder_encode(audioencoder *aen, char *inbuffer, int buffersize)
 {
 	AVPacket pkt;
 	int ret = 0, data_present, i, j, frame_size;
-	
+
 //printf("write %d / %d\n", buffersize, aen->encoderbuffersize);
 	// write cq
 	int offset, bytesleft, bytestocopy, length;
@@ -198,7 +231,7 @@ int encoder_encode(audioencoder *aen, char *inbuffer, int buffersize)
 		offset += bytestocopy;
 		aen->rear += bytestocopy; aen->rear %= aen->encoderbuffersize;
 	}
-//printf("read %d / %d\n", aen->codecframesize, aen->frame->linesize[0]);
+
 	// read cq
 	do
 	{
@@ -217,6 +250,7 @@ int encoder_encode(audioencoder *aen, char *inbuffer, int buffersize)
 			}
 			else
 			{
+//printf("read %d / %d\n", aen->codecframesize, aen->frame->linesize[0]);
 				for(offset=0,bytesleft=aen->codecframesize;bytesleft;bytesleft-=bytestocopy)
 				{
 					bytestocopy = (aen->front+bytesleft>aen->encoderbuffersize?aen->encoderbuffersize-aen->front:bytesleft);
@@ -228,10 +262,10 @@ int encoder_encode(audioencoder *aen, char *inbuffer, int buffersize)
 				if (av_sample_fmt_is_planar(aen->avformat))
 				{
 					frame_size = aen->codeccontext->frame_size;
+					signed short *src = (signed short *)aen->codecbuffer;
 					switch (aen->avformat)
 					{
 						case AV_SAMPLE_FMT_S16P:
-							signed short *src = (signed short *)aen->codecbuffer;
 							for(i=0;i<aen->channels;i++)
 							{
 								signed short *dst = (signed short *)aen->frame->data[i];
@@ -242,13 +276,12 @@ int encoder_encode(audioencoder *aen, char *inbuffer, int buffersize)
 							}
 							break;
 						case AV_SAMPLE_FMT_FLTP:
-							signed short *srcf = (signed short *)aen->codecbuffer;
 							for(i=0;i<aen->channels;i++)
 							{
 								float *dstf = (float *)aen->frame->data[i];
 								for(j=0;j<frame_size;j++)
 								{
-									dstf[j] = (float)srcf[j*aen->channels+i];
+									dstf[j] = (float)src[j*aen->channels+i] / 32767.0f;
 								}
 							}
 							break;
@@ -257,12 +290,29 @@ int encoder_encode(audioencoder *aen, char *inbuffer, int buffersize)
 				}
 				else
 				{
-					memcpy(aen->frame->data[0], aen->codecbuffer, aen->codecframesize);
+					switch (aen->avformat)
+					{
+						case AV_SAMPLE_FMT_S16P:
+							memcpy(aen->frame->data[0], aen->codecbuffer, aen->codecframesize);
+							break;
+						case AV_SAMPLE_FMT_FLTP:
+							i = 0;
+							signed short *srci = (signed short *)aen->codecbuffer;
+							float *dsti = (float *)aen->frame->data[0];
+							for(i=0;i<aen->codecframesize;i++)
+								dsti[i] = (float)srci[i];
+							break;
+						default: break;
+					}
 				}
 
 				av_init_packet(&pkt);
 				pkt.data = NULL; // packet data will be allocated by the encoder
 				pkt.size = 0;
+
+				// Set a timestamp based on the sample rate for the container.
+				aen->frame->pts = aen->pts;
+				aen->pts += aen->frame->nb_samples;
 
 				if ((ret = avcodec_encode_audio2(aen->codeccontext, &pkt, aen->frame, &data_present)) < 0)
 				{

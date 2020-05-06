@@ -38,6 +38,7 @@ typedef struct
 	int encoderbuffersize, front, rear;
 	int codecframesize;
 	AVFrame *frame;
+	int64_t pts;
 }audioencoder;
 
 int init_encoder(audioencoder *aen, char *filename, enum AVCodecID id, enum AVSampleFormat avformat, snd_pcm_format_t format, unsigned int rate, unsigned int channels, int64_t bit_rate);

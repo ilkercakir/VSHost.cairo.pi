@@ -9,6 +9,8 @@
 #include <gtk/gtk.h>
 
 #include <libavcodec/avcodec.h>
+#include <libavutil/eval.h>
+#include <libavutil/display.h>
 #include <libavutil/pixfmt.h>
 #include <libavutil/avutil.h>
 #include <libavutil/samplefmt.h>

@@ -503,11 +503,10 @@ static gpointer audioeffectchain_thread_ffmpeg0(gpointer args)
 //printf("%s %d\n", aec->device, ap->buffersize);
 		writetojack(ap->buffer, ap->buffersize, &(tp->jack));
 	}
-	press_vp_stop_button(plp);
 
 	close_audiojack(&(tp->jack));
 
-	close_videoplayerwidgets(vpw);
+	close_videoplayerwidgets(plp);
 	close_playlistparams(plp);
 
 //printf("exiting %s\n", aec->name);

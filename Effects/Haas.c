@@ -46,8 +46,6 @@ void aef_setparameter(audioeffect *ae, int i, float value)
 
 /* User defined parameter setter code begin */
 
-	soundhaas *h = (soundhaas *)ae->data;
-
 	switch(i)
 	{
 		case 0: // Enable

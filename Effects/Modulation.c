@@ -47,8 +47,6 @@ void aef_setparameter(audioeffect *ae, int i, float value)
 
 /* User defined parameter setter code begin */
 
-	soundmod *m = (soundmod *)ae->data;
-
 	switch(i)
 	{
 		case 0: // Enable

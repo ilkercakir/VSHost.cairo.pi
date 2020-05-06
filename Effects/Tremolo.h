@@ -13,6 +13,7 @@ typedef struct
 	unsigned int channels; // channels
 	float depth; // depth 0.0 .. 1.0
 	float tremolorate; // tremolo rate  0.1 .. 10
+	int invert; // invert depth phase between L/R
 	unsigned int framecount; // time=framecount/rate % rate; instantaneous volume=1-depth/2*(1-sin(2*pi*tremolorate*time))
 	int framesinT, frames;
 
@@ -20,8 +21,8 @@ typedef struct
 	int initialized;
 }soundtremolo;
 
-void soundtremolo_reinit(int enabled, float tremolorate, float depth, soundtremolo *t);
-void soundtremolo_init(int enabled, float tremolorate, float depth, snd_pcm_format_t format, unsigned int rate, unsigned int channels, soundtremolo *t);
+void soundtremolo_reinit(int enabled, float tremolorate, float depth, int invert, soundtremolo *t);
+void soundtremolo_init(int enabled, float tremolorate, float depth, int invert, snd_pcm_format_t format, unsigned int rate, unsigned int channels, soundtremolo *t);
 void soundtremolo_add(char* inbuffer, int inbuffersize, soundtremolo *t);
 void soundtremolo_close(soundtremolo *t);
 
