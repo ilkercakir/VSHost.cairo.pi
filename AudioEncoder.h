@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <pthread.h>
 
 #include <alsa/asoundlib.h>
 
@@ -17,6 +18,11 @@
 #include "libavutil/avstring.h"
 #include "libavutil/frame.h"
 #include "libavutil/opt.h"
+
+typedef enum{
+	RS_IDLE = 0,
+	RS_RECORDING
+}recordingstate;
 
 typedef struct
 {
@@ -39,9 +45,20 @@ typedef struct
 	int codecframesize;
 	AVFrame *frame;
 	int64_t pts;
+	char *recordedfilename;
+
+	recordingstate rstate;
+	pthread_mutex_t recordmutex;
+	pthread_cond_t recordqlowcond;
+	pthread_cond_t recordqhighcond;
+	pthread_t tid;
+	int retval_thread;
 }audioencoder;
 
-int init_encoder(audioencoder *aen, char *filename, enum AVCodecID id, enum AVSampleFormat avformat, snd_pcm_format_t format, unsigned int rate, unsigned int channels, int64_t bit_rate);
-int encoder_encode(audioencoder *aen, char *inbuffer, int buffersize);
-int close_encoder(audioencoder *aen);
+void init_encoder(audioencoder *aen);
+int start_encoder(audioencoder *aen, char *filename, enum AVCodecID id, enum AVSampleFormat avformat, snd_pcm_format_t format, unsigned int rate, unsigned int channels, int64_t bit_rate);
+void encoder_add_buffer(audioencoder *aen, char *inbuffer, int buffersize);
+void stop_encoder(audioencoder *aen);
+void close_encoder(audioencoder *aen);
+recordingstate encoder_getstate(audioencoder *aen);
 #endif

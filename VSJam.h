@@ -15,11 +15,6 @@
 
 #include "AudioEncoder.h"
 
-typedef enum{
-	RS_IDLE = 0,
-	RS_RECORDING
-}recordingstate;
-
 typedef struct
 {
 	int id;
@@ -79,12 +74,21 @@ struct auout
 	GtkWidget *container;
 	GtkWidget *outputframe;
 	GtkWidget *outputhbox;
+	GtkWidget *outputdevicesvbox;
 	GtkWidget *outputdevices;
+	GtkWidget *ledvbox;
 	GtkWidget *led;
+	GtkWidget *framesvbox;
+	GtkWidget *frameshbox;
 	GtkWidget *frameslabel;
+	GtkWidget *spinbuttonvbox;
 	GtkWidget *spinbutton;
+	GtkWidget *recordvbox;
+	GtkWidget *recordhbox;
 	GtkWidget *recordlabel;
+	GtkWidget *recordformatsvbox;
 	GtkWidget *recordformats;
+	GtkWidget *recordswitchvbox;
 	GtkWidget *recordswitch;
 
 	int mixerChannels;
@@ -96,10 +100,8 @@ struct auout
 	pthread_cond_t mxinitcond;
 	int mxready;
 
-	recordingstate rstate;
 	char *recordedfilename;
 	audioencoder aen;
-	pthread_mutex_t *recordmutex; // PTHREAD_MUTEX_INITIALIZER;
 };
 
 void audioout_init(audioout *ao, snd_pcm_format_t format, unsigned int rate, unsigned int channels, unsigned int frames, int mixerChannels, audiojam *aj, GtkWidget *container, GtkWidget *window);

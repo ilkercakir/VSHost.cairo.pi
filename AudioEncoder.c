@@ -26,7 +26,186 @@ int select_sample_rate(AVCodec *codec)
     return 0;
 }
 
-int init_encoder(audioencoder *aen, char *filename, enum AVCodecID id, enum AVSampleFormat avformat, snd_pcm_format_t format, unsigned int rate, unsigned int channels, int64_t bit_rate)
+static void* encoder_thread(void* args)
+{
+	int ctype = PTHREAD_CANCEL_ASYNCHRONOUS;
+	int ctype_old;
+	pthread_setcanceltype(ctype, &ctype_old);
+
+	audioencoder *aen = (audioencoder *)args;
+
+	AVPacket pkt;
+	int ret = 0, data_present, i, j, frame_size;
+	int offset, bytesleft, bytestocopy;
+
+	pthread_mutex_lock(&(aen->recordmutex));
+	aen->rstate = RS_RECORDING;
+	pthread_mutex_unlock(&(aen->recordmutex));
+
+	// read cq
+	while(1)
+	{
+		pthread_mutex_lock(&(aen->recordmutex));
+		while (((aen->rear - aen->front + aen->encoderbuffersize)%aen->encoderbuffersize < aen->codecframesize) && (aen->rstate == RS_RECORDING))
+		{
+			//printf("encoder queue sleeping, underrun\n");
+			pthread_cond_wait(&(aen->recordqlowcond), &(aen->recordmutex));
+		}
+
+		if (aen->rstate != RS_RECORDING)
+		{
+			pthread_mutex_unlock(&(aen->recordmutex));
+			break;
+		}
+
+//printf("read %d / %d\n", aen->codecframesize, aen->frame->linesize[0]);
+		for(offset=0,bytesleft=aen->codecframesize;bytesleft;bytesleft-=bytestocopy)
+		{
+			bytestocopy = (aen->front+bytesleft>aen->encoderbuffersize?aen->encoderbuffersize-aen->front:bytesleft);
+			memcpy(aen->codecbuffer+offset, aen->encoderbuffer+aen->front, bytestocopy);
+			offset += bytestocopy;
+			aen->front += bytestocopy; aen->front %= aen->encoderbuffersize;
+		}
+		pthread_cond_signal(&(aen->recordqhighcond)); // Should wake up *one* thread
+		pthread_mutex_unlock(&(aen->recordmutex));
+
+		// make sure the frame is writable, makes a copy if the encoder kept a reference internally
+		if ((ret = av_frame_make_writable(aen->frame))<0)
+		{
+			printf("Could not make frame writable (error '%s')\n", av_err2str(ret));
+			ret = -1;
+		}
+		else
+		{
+			if (av_sample_fmt_is_planar(aen->avformat))
+			{
+				frame_size = aen->codeccontext->frame_size;
+				signed short *src = (signed short *)aen->codecbuffer;
+				switch (aen->avformat)
+				{
+					case AV_SAMPLE_FMT_S16P:
+						for(i=0;i<aen->channels;i++)
+						{
+							signed short *dst = (signed short *)aen->frame->data[i];
+							for(j=0;j<frame_size;j++)
+							{
+								dst[j] = src[j*aen->channels+i];
+							}
+						}
+						break;
+					case AV_SAMPLE_FMT_FLTP:
+						for(i=0;i<aen->channels;i++)
+						{
+							float *dstf = (float *)aen->frame->data[i];
+							for(j=0;j<frame_size;j++)
+							{
+								dstf[j] = (float)src[j*aen->channels+i] / 32767.0f;
+							}
+						}
+						break;
+					default: break;
+				}
+			}
+			else
+			{
+				switch (aen->avformat)
+				{
+					case AV_SAMPLE_FMT_S16P:
+						memcpy(aen->frame->data[0], aen->codecbuffer, aen->codecframesize);
+						break;
+					case AV_SAMPLE_FMT_FLTP:
+						i = 0;
+						signed short *srci = (signed short *)aen->codecbuffer;
+						float *dsti = (float *)aen->frame->data[0];
+						for(i=0;i<aen->codecframesize;i++)
+							dsti[i] = (float)srci[i];
+						break;
+					default: break;
+				}
+			}
+
+			av_init_packet(&pkt);
+			pkt.data = NULL; // packet data will be allocated by the encoder
+			pkt.size = 0;
+
+			// Set a timestamp based on the sample rate for the container.
+			aen->frame->pts = aen->pts;
+			aen->pts += aen->frame->nb_samples;
+
+			if ((ret = avcodec_encode_audio2(aen->codeccontext, &pkt, aen->frame, &data_present)) < 0)
+			{
+				printf("Could not encode frame (error '%s')\n", av_err2str(ret));
+				av_packet_unref(&pkt);
+				ret = -1;
+			}
+			else
+			{
+				// Write one audio frame from the temporary packet to the output file.
+				if (data_present) 
+				{
+					if ((ret = av_write_frame(aen->formatcontext, &pkt)) < 0)
+					{
+						printf("Could not write frame (error '%s')\n", av_err2str(ret));
+						av_packet_unref(&pkt);
+						ret = -1;
+					}
+					else
+						av_packet_unref(&pkt);
+				}
+			}
+		}
+
+		if (ret<0) break;
+	}
+
+	if ((ret = av_write_trailer(aen->formatcontext)) < 0)
+	{
+		printf("Could not write output file trailer (error '%s')\n", av_err2str(ret));
+		ret = -1;
+	}
+
+//printf("exiting encoder_thread\n");
+	aen->retval_thread = ret;
+	pthread_exit(&(aen->retval_thread));
+}
+
+void encoder_create_thread(audioencoder *aen)
+{
+	int err;
+	err = pthread_create(&(aen->tid), NULL, &encoder_thread, (void*)aen);
+	if (err)
+	{}
+}
+
+void encoder_terminate_thread(audioencoder *aen)
+{
+	pthread_mutex_lock(&(aen->recordmutex));
+	aen->rstate = RS_IDLE;
+	pthread_cond_signal(&(aen->recordqlowcond)); // Should wake up *one* thread
+	pthread_mutex_unlock(&(aen->recordmutex));
+
+	int i;
+	if ((i=pthread_join(aen->tid, NULL)))
+		printf("pthread_join error, aen->tid, %d\n", i);
+}
+
+void init_encoder(audioencoder *aen)
+{
+	int err;
+
+	aen->rstate = RS_IDLE;
+
+	if((err=pthread_mutex_init(&(aen->recordmutex), NULL))!=0 )
+		printf("record mutex init failed, %d\n", err);
+
+	if ((err=pthread_cond_init(&(aen->recordqlowcond), NULL))!=0 )
+		printf("record queue low init failed, %d\n", err);
+
+	if ((err=pthread_cond_init(&(aen->recordqhighcond), NULL))!=0 )
+		printf("record queue low init failed, %d\n", err);
+}
+
+int start_encoder(audioencoder *aen, char *filename, enum AVCodecID id, enum AVSampleFormat avformat, snd_pcm_format_t format, unsigned int rate, unsigned int channels, int64_t bit_rate)
 {
 	int err;
 
@@ -42,11 +221,10 @@ int init_encoder(audioencoder *aen, char *filename, enum AVCodecID id, enum AVSa
 	aen->formatcontext = NULL;
 	aen->stream = NULL;
 	aen->iocontext = NULL;
+	aen->pts = 0;
 
 	aen->encoderbuffer = NULL;
 	aen->front = aen->rear = 0;
-
-	aen->pts = 0;
 
 	/* register all the codecs */
 	av_register_all();
@@ -195,6 +373,8 @@ int init_encoder(audioencoder *aen, char *filename, enum AVCodecID id, enum AVSa
 										aen->codecbuffer = malloc(aen->codecframesize);
 										aen->encoderbuffersize = aen->codecframesize * 10;
 										aen->encoderbuffer = malloc(aen->encoderbuffersize);
+
+										encoder_create_thread(aen);
 									}
 								}
 							}
@@ -216,142 +396,36 @@ int init_encoder(audioencoder *aen, char *filename, enum AVCodecID id, enum AVSa
 	return err;
 }
 
-int encoder_encode(audioencoder *aen, char *inbuffer, int buffersize)
+void encoder_add_buffer(audioencoder *aen, char *inbuffer, int buffersize)
 {
-	AVPacket pkt;
-	int ret = 0, data_present, i, j, frame_size;
+	int offset, bytesleft, bytestocopy;
 
-//printf("write %d / %d\n", buffersize, aen->encoderbuffersize);
-	// write cq
-	int offset, bytesleft, bytestocopy, length;
-	for(offset=0,bytesleft=buffersize;bytesleft;bytesleft-=bytestocopy)
+	pthread_mutex_lock(&(aen->recordmutex));
+	if (aen->rstate == RS_RECORDING)
 	{
-		bytestocopy = (aen->rear+bytesleft>aen->encoderbuffersize?aen->encoderbuffersize-aen->rear:bytesleft);
-		memcpy(aen->encoderbuffer+aen->rear, inbuffer+offset, bytestocopy);
-		offset += bytestocopy;
-		aen->rear += bytestocopy; aen->rear %= aen->encoderbuffersize;
-	}
-
-	// read cq
-	do
-	{
-		length = (aen->rear - aen->front + aen->encoderbuffersize) % aen->encoderbuffersize;
-		if (length<aen->codecframesize)
+		while ((aen->front - aen->rear + aen->encoderbuffersize -1)%aen->encoderbuffersize < buffersize) // capacity < input
 		{
-			break;
+			//printf("encoder queue sleeping, overrun\n");
+			pthread_cond_wait(&(aen->recordqhighcond), &(aen->recordmutex));
 		}
-		else
+
+		for(offset=0,bytesleft=buffersize;bytesleft;bytesleft-=bytestocopy)
 		{
-			// make sure the frame is writable, makes a copy if the encoder kept a reference internally
-			if ((ret = av_frame_make_writable(aen->frame))<0)
-			{
-				printf("Could not make frame writable (error '%s')\n", av_err2str(ret));
-				ret = -1;
-			}
-			else
-			{
-//printf("read %d / %d\n", aen->codecframesize, aen->frame->linesize[0]);
-				for(offset=0,bytesleft=aen->codecframesize;bytesleft;bytesleft-=bytestocopy)
-				{
-					bytestocopy = (aen->front+bytesleft>aen->encoderbuffersize?aen->encoderbuffersize-aen->front:bytesleft);
-					memcpy(aen->codecbuffer+offset, aen->encoderbuffer+aen->front, bytestocopy);
-					offset += bytestocopy;
-					aen->front += bytestocopy; aen->front %= aen->encoderbuffersize;
-				}
-
-				if (av_sample_fmt_is_planar(aen->avformat))
-				{
-					frame_size = aen->codeccontext->frame_size;
-					signed short *src = (signed short *)aen->codecbuffer;
-					switch (aen->avformat)
-					{
-						case AV_SAMPLE_FMT_S16P:
-							for(i=0;i<aen->channels;i++)
-							{
-								signed short *dst = (signed short *)aen->frame->data[i];
-								for(j=0;j<frame_size;j++)
-								{
-									dst[j] = src[j*aen->channels+i];
-								}
-							}
-							break;
-						case AV_SAMPLE_FMT_FLTP:
-							for(i=0;i<aen->channels;i++)
-							{
-								float *dstf = (float *)aen->frame->data[i];
-								for(j=0;j<frame_size;j++)
-								{
-									dstf[j] = (float)src[j*aen->channels+i] / 32767.0f;
-								}
-							}
-							break;
-						default: break;
-					}
-				}
-				else
-				{
-					switch (aen->avformat)
-					{
-						case AV_SAMPLE_FMT_S16P:
-							memcpy(aen->frame->data[0], aen->codecbuffer, aen->codecframesize);
-							break;
-						case AV_SAMPLE_FMT_FLTP:
-							i = 0;
-							signed short *srci = (signed short *)aen->codecbuffer;
-							float *dsti = (float *)aen->frame->data[0];
-							for(i=0;i<aen->codecframesize;i++)
-								dsti[i] = (float)srci[i];
-							break;
-						default: break;
-					}
-				}
-
-				av_init_packet(&pkt);
-				pkt.data = NULL; // packet data will be allocated by the encoder
-				pkt.size = 0;
-
-				// Set a timestamp based on the sample rate for the container.
-				aen->frame->pts = aen->pts;
-				aen->pts += aen->frame->nb_samples;
-
-				if ((ret = avcodec_encode_audio2(aen->codeccontext, &pkt, aen->frame, &data_present)) < 0)
-				{
-					printf("Could not encode frame (error '%s')\n", av_err2str(ret));
-					av_packet_unref(&pkt);
-					ret = -1;
-				}
-				else
-				{
-					// Write one audio frame from the temporary packet to the output file.
-					if (data_present) 
-					{
-						if ((ret = av_write_frame(aen->formatcontext, &pkt)) < 0)
-						{
-							printf("Could not write frame (error '%s')\n", av_err2str(ret));
-							av_packet_unref(&pkt);
-							ret = -1;
-						}
-						else
-							av_packet_unref(&pkt);
-					}
-				}
-			}
+			bytestocopy = (aen->rear+bytesleft>aen->encoderbuffersize?aen->encoderbuffersize-aen->rear:bytesleft);
+			memcpy(aen->encoderbuffer+aen->rear, inbuffer+offset, bytestocopy);
+			offset += bytestocopy;
+			aen->rear += bytestocopy; aen->rear %= aen->encoderbuffersize;
 		}
-		if (ret<0) break;
-	}
-	while(1);
 
-	return(ret);
+		pthread_cond_signal(&(aen->recordqlowcond)); // Should wake up *one* thread
+//printf("encoder_add_buffer %d / %d\n", buffersize, aen->encoderbuffersize);
+	}
+	pthread_mutex_unlock(&(aen->recordmutex));
 }
 
-int close_encoder(audioencoder *aen)
+void stop_encoder(audioencoder *aen)
 {
-	int err;
-	if ((err = av_write_trailer(aen->formatcontext)) < 0)
-	{
-		printf("Could not write output file trailer (error '%s')\n", av_err2str(err));
-		err = -1;
-	}
+	encoder_terminate_thread(aen);
 
 	if (aen->codeccontext)
 	{
@@ -367,6 +441,24 @@ int close_encoder(audioencoder *aen)
 
 	free(aen->codecbuffer);
 	free(aen->encoderbuffer);
-	
-	return err;
+}
+
+void close_encoder(audioencoder *aen)
+{
+	if (aen->rstate != RS_IDLE)
+		stop_encoder(aen);
+		
+	pthread_mutex_destroy(&(aen->recordmutex));
+	pthread_cond_destroy(&(aen->recordqlowcond));
+	pthread_cond_destroy(&(aen->recordqhighcond));
+}
+
+recordingstate encoder_getstate(audioencoder *aen)
+{
+	recordingstate ret;
+
+	pthread_mutex_lock(&(aen->recordmutex));
+	ret = aen->rstate;
+	pthread_mutex_unlock(&(aen->recordmutex));
+	return ret;
 }
