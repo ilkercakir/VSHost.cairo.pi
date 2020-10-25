@@ -59,8 +59,8 @@ void virtualstudio_init(virtualstudio *vs, int maxchains, int maxeffects, snd_pc
 
 // horizontal box
 	vs->houtbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-	//gtk_container_add(GTK_CONTAINER(vs->vbox), vs->houtbox);
-	gtk_box_pack_start(GTK_BOX(vs->vbox), vs->houtbox, FALSE, TRUE, 0);
+	gtk_container_add(GTK_CONTAINER(vs->vbox), vs->houtbox);
+	//gtk_box_pack_start(GTK_BOX(vs->vbox), vs->houtbox, FALSE, TRUE, 0);
 
 // vertical box
 	vs->voutbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
@@ -77,8 +77,8 @@ void virtualstudio_init(virtualstudio *vs, int maxchains, int maxeffects, snd_pc
 
 // vertical box
 	vs->vjambox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-	gtk_container_add(GTK_CONTAINER(vs->hjambox), vs->vjambox);
-	//gtk_box_pack_start(GTK_BOX(vs->hjambox), vs->vjambox, FALSE, TRUE, 0);
+	//gtk_container_add(GTK_CONTAINER(vs->hjambox), vs->vjambox);
+	gtk_box_pack_start(GTK_BOX(vs->hjambox), vs->vjambox, TRUE, TRUE, 0);
 
 // Audio Input Jam
 	audiojam_init(&(vs->aj), vs->maxchains, vs->maxeffects, vs->format, vs->rate, vs->channels, vs->frames, vs->vjambox, vs->dbpath, &(vs->ao.mx), vs->window);

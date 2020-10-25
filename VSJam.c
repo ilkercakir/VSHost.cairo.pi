@@ -336,8 +336,8 @@ void audioout_init(audioout *ao, snd_pcm_format_t format, unsigned int rate, uns
 
 // frame
 	ao->outputframe = gtk_frame_new("Audio Mixer");
-	gtk_container_add(GTK_CONTAINER(ao->container), ao->outputframe);
-	//gtk_box_pack_start(GTK_BOX(ao->container), ao->outputframe, TRUE, TRUE, 0);
+	//gtk_container_add(GTK_CONTAINER(ao->container), ao->outputframe);
+	gtk_box_pack_start(GTK_BOX(ao->container), ao->outputframe, TRUE, TRUE, 0);
 
 // horizontal box
 	ao->outputhbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
