@@ -1331,12 +1331,10 @@ void audioeffectchain_init(audioeffectchain *aec, char *name, int id, audiomixer
 	gchar *device;
 	g_object_get((gpointer)aec->inputdevices, "active-id", &device, NULL);
 //	audioeffectchain_create_thread(aec, device, aec->frames, aec->channelbuffers, mx);
-
 	if (get_devicetype(device)==hardwaredevice)
 		audioeffectchain_create_thread(aec, device, aec->frames, aec->channelbuffers, mx);
 	else
 		audioeffectchain_create_thread_ffmpeg(aec, device, aec->frames, aec->channelbuffers, mx);
-
 	g_free(device);
 }
 

@@ -160,6 +160,8 @@ static void outputdevicescombo_changed(GtkWidget *combo, gpointer data)
 				audioeffectchain_terminate_thread(aec);
 			else
 				audioeffectchain_terminate_thread_ffmpeg(aec);
+
+			gdk_threads_add_idle(audioeffectchain_led, aec);
 		}
 	}
 
@@ -175,9 +177,16 @@ static void outputdevicescombo_changed(GtkWidget *combo, gpointer data)
 		aec = &(aj->aec[i]);
 		if (aec->id)
 		{
-			gchar *device;
+			//gchar *device;
+			//g_object_get((gpointer)aec->inputdevices, "active-id", &device, NULL);
+			//audioeffectchain_create_thread(aec, device, aec->frames, aec->channelbuffers, aec->mx);
+			//g_free(device);
+
 			g_object_get((gpointer)aec->inputdevices, "active-id", &device, NULL);
-			audioeffectchain_create_thread(aec, device, aec->frames, aec->channelbuffers, aec->mx);
+			if (get_devicetype(device)==hardwaredevice)
+				audioeffectchain_create_thread(aec, device, aec->frames, aec->channelbuffers, aec->mx);
+			else
+				audioeffectchain_create_thread_ffmpeg(aec, device, aec->frames, aec->channelbuffers, aec->mx);
 			g_free(device);
 		}
 	}
@@ -327,8 +336,8 @@ void audioout_init(audioout *ao, snd_pcm_format_t format, unsigned int rate, uns
 
 // frame
 	ao->outputframe = gtk_frame_new("Audio Mixer");
-	//gtk_container_add(GTK_CONTAINER(ao->container), ao->outputframe);
-	gtk_box_pack_start(GTK_BOX(ao->container), ao->outputframe, TRUE, TRUE, 0);
+	gtk_container_add(GTK_CONTAINER(ao->container), ao->outputframe);
+	//gtk_box_pack_start(GTK_BOX(ao->container), ao->outputframe, TRUE, TRUE, 0);
 
 // horizontal box
 	ao->outputhbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
@@ -338,7 +347,7 @@ void audioout_init(audioout *ao, snd_pcm_format_t format, unsigned int rate, uns
 // output devices vbox
 	ao->outputdevicesvbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
 	gtk_container_add(GTK_CONTAINER(ao->outputhbox), ao->outputdevicesvbox);
-	//gtk_box_pack_start(GTK_BOX(ao->outputhbox), ao->vbox1, TRUE, TRUE, 0);
+	//gtk_box_pack_start(GTK_BOX(ao->outputhbox), ao->outputdevicesvbox, FALSE, TRUE, 0);
 
 // output devices combo
 	ao->outputdevices = gtk_combo_box_text_new();

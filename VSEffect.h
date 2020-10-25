@@ -114,6 +114,7 @@ void audioeffect_process(audioeffect *ae, uint8_t* inbuffer, int inbuffersize);
 void audioeffect_close(audioeffect *ae);
 
 void audioeffectchain_create_thread(audioeffectchain *aec, char *device, unsigned int frames, int channelbuffers, audiomixer *mx);
+void audioeffectchain_create_thread_ffmpeg(audioeffectchain *aec, char *device, unsigned int frames, int channelbuffers, audiomixer *mx);
 void audioeffectchain_terminate_thread(audioeffectchain *aec);
 void audioeffectchain_terminate_thread_ffmpeg(audioeffectchain *aec);
 void audioeffectchain_save(audioeffectchain *aec);
@@ -124,6 +125,7 @@ void audioeffectchain_unloadeffect(audioeffectchain *aec, int effect);
 void audioeffectchain_order(audioeffectchain *aec, int effect);
 void audioeffectchain_unorder(audioeffectchain *aec, int effect);
 void audioeffectchain_close(audioeffectchain *aec);
+gboolean audioeffectchain_led(gpointer data);
 
 devicetype get_devicetype(char *device);
 #endif
