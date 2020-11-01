@@ -23,11 +23,11 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=7
+current_page=3
 FILE_NAME_0=3582;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSHost.c;0;4
-FILE_NAME_1=2162;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVStudio.c;0;4
-FILE_NAME_2=780;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSJam.c;0;4
-FILE_NAME_3=15592;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSEffect.c;0;4
+FILE_NAME_1=2680;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVStudio.c;0;4
+FILE_NAME_2=8775;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSJam.c;0;4
+FILE_NAME_3=0;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSEffect.c;0;4
 FILE_NAME_4=0;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSTMediaPlayer.c;0;4
 FILE_NAME_5=0;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSTVideoPlayer.c;0;4
 FILE_NAME_6=18205;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FYUV420RGBgl.c;0;4
@@ -53,8 +53,8 @@ NF_01_WD=
 NF_02_LB=Nesne_yi Derle
 NF_02_CM=make %e.o
 NF_02_WD=
-NF_03_LB=
-NF_03_CM=
+NF_03_LB=Github
+NF_03_CM=git gui
 NF_03_WD=
 EX_00_LB=_Çalıştır
 EX_00_CM=sudo "./%e"
