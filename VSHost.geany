@@ -23,17 +23,17 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=8
-FILE_NAME_0=3582;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSHost.c;0;4
-FILE_NAME_1=2680;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVStudio.c;0;4
-FILE_NAME_2=12295;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSJam.c;0;4
-FILE_NAME_3=1945;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSJam.h;0;4
-FILE_NAME_4=2132;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSEffect.c;0;4
-FILE_NAME_5=0;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSEffect.h;0;4
+current_page=1
+FILE_NAME_0=2722;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVStudio.c;0;4
+FILE_NAME_1=12503;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSJam.c;0;4
+FILE_NAME_2=1945;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSJam.h;0;4
+FILE_NAME_3=3352;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSEffect.c;0;4
+FILE_NAME_4=0;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSEffect.h;0;4
+FILE_NAME_5=10388;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FAudioDev.c;0;4
 FILE_NAME_6=4169;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FAudioPipeNB.c;0;4
 FILE_NAME_7=852;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FAudioPipeNB.h;0;4
 FILE_NAME_8=6212;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FPulseAudio.c;0;4
-FILE_NAME_9=903;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FPulseAudio.h;0;4
+FILE_NAME_9=672;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FPulseAudio.h;0;4
 
 [VTE]
 last_dir=/home/pi/Desktop/C/Cover.cairo.pi
