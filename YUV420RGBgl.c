@@ -297,7 +297,7 @@ void init_ogl_rgba(oglparameters *op)
 {
 	oglstate *ogl = op->ogl;
 
-	GLbyte vShaderStr[] =  
+	GLbyte vShaderStr[] = 
 	"attribute vec4 a_position;   \n"
 	"attribute vec2 a_texCoord;   \n"
 	"varying vec2 v_texCoord;     \n"
@@ -305,15 +305,16 @@ void init_ogl_rgba(oglparameters *op)
 	"{                            \n"
 	"   gl_Position = a_position; \n"
 	"   v_texCoord = a_texCoord;  \n"
-	"}                            \n";
+	"}                            \n\0";
 
-	GLbyte fShaderStr[] =  
+	GLbyte fShaderStr[] = 
+	"precision mediump float;                            \n"
 	"varying vec2 v_texCoord;                            \n"
 	"uniform sampler2D s_texture;                        \n"
 	"void main()                                         \n"
 	"{                                                   \n"
 	"  gl_FragColor = texture2D(s_texture, v_texCoord);  \n"
-	"}                                                   \n";
+	"}                                                   \n\0";
 
 	// Load the shaders and get a linked program object
 	ogl->program = LoadProgram((char*)vShaderStr, (char*)fShaderStr);
@@ -372,9 +373,10 @@ void init_ogl_yuv420(oglparameters *op)
 		"{                            \n"
 		"   gl_Position = a_position; \n"
 		"   v_texCoord = a_texCoord;  \n"
-		"}                            \n";
+		"}                            \n\0";
 
-	GLbyte fShaderStr[] =
+	GLbyte fShaderStr[] = 
+		"precision mediump float;                              \n"
 		"varying vec2 v_texCoord;                              \n"
 		"uniform mat3 yuv2rgb;                                 \n"
 		"uniform sampler2D y_texture;                          \n"
@@ -392,7 +394,7 @@ void init_ogl_yuv420(oglparameters *op)
 		"  vec3 rgb=yuv*yuv2rgb;                               \n"
 
 		"  gl_FragColor=vec4(rgb, 1.0);                        \n"
-		"}                                                     \n";
+		"}                                                     \n\0";
 
 	// Load the shaders and get a linked program object
 	ogl->program = LoadProgram((char*)vShaderStr, (char*)fShaderStr);
@@ -478,9 +480,10 @@ void init_ogl_yuv422(oglparameters *op)
 		"{                            \n"
 		"   gl_Position = a_position; \n"
 		"   v_texCoord = a_texCoord;  \n"
-		"}                            \n";
+		"}                            \n\0";
 
 	GLbyte fShaderStr[] =
+		"precision mediump float;                              \n"
 		"varying vec2 v_texCoord;                              \n"
 		"uniform mat3 yuv2rgb;                                 \n"
 		"uniform sampler2D y_texture;                          \n"
@@ -498,7 +501,7 @@ void init_ogl_yuv422(oglparameters *op)
 		"  vec3 rgb=yuv*yuv2rgb;                               \n"
 
 		"  gl_FragColor=vec4(rgb, 1.0);                        \n"
-		"}                                                     \n";
+		"}                                                     \n\0";
 
 	// Load the shaders and get a linked program object
 	ogl->program = LoadProgram((char*)vShaderStr, (char*)fShaderStr);
@@ -880,7 +883,7 @@ void realize_da_event(GtkWidget *widget, gpointer data)
 	oglidle *oi = (oglidle*)data;
 	oglstate *ogl = (oglstate*)&(oi->ogl);
 
-	int width, height, imgsize, j;
+	int width, height, imgsize;
 
 	GtkAllocation* alloc = g_new(GtkAllocation, 1);
 	gtk_widget_get_allocation(widget, alloc);
@@ -901,8 +904,13 @@ void realize_da_event(GtkWidget *widget, gpointer data)
 //printf("texture size is currently %dx%d\n", ogl->width, ogl->height);
 	imgsize = ogl->width * ogl->height *4;
 	oi->data.buf = malloc(imgsize); // w*h RGBA
-	for(j=0;j<imgsize;j++)
-		oi->data.buf[j] = 0x90;
+	//int j;
+	//for(j=0;j<imgsize;j++)
+	//	oi->data.buf[j] = 0x90;
+	FILE *f = fopen("./images/Splash.data", "rb");
+	fread(oi->data.buf, 1, imgsize, f);
+	fclose(f);
+
 	oglidle_thread_tex2d_ogl(oi, oi->data.buf);
 	free(oi->data.buf);
 

@@ -23,27 +23,32 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=1
-FILE_NAME_0=2722;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVStudio.c;0;4
-FILE_NAME_1=12503;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSJam.c;0;4
-FILE_NAME_2=1945;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSJam.h;0;4
-FILE_NAME_3=3352;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSEffect.c;0;4
-FILE_NAME_4=0;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSEffect.h;0;4
-FILE_NAME_5=10388;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FAudioDev.c;0;4
-FILE_NAME_6=4169;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FAudioPipeNB.c;0;4
-FILE_NAME_7=852;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FAudioPipeNB.h;0;4
-FILE_NAME_8=6212;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FPulseAudio.c;0;4
-FILE_NAME_9=672;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FPulseAudio.h;0;4
+current_page=13
+FILE_NAME_0=1770;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSHost.c;0;4
+FILE_NAME_1=2722;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVStudio.c;0;4
+FILE_NAME_2=12503;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSJam.c;0;4
+FILE_NAME_3=1945;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSJam.h;0;4
+FILE_NAME_4=38373;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSEffect.c;0;4
+FILE_NAME_5=0;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSEffect.h;0;4
+FILE_NAME_6=10388;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FAudioDev.c;0;4
+FILE_NAME_7=4169;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FAudioPipeNB.c;0;4
+FILE_NAME_8=852;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FAudioPipeNB.h;0;4
+FILE_NAME_9=6212;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FPulseAudio.c;0;4
+FILE_NAME_10=314;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FPulseAudio.h;0;4
+FILE_NAME_11=26388;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FYUV420RGBgl.c;0;4
+FILE_NAME_12=801;C++;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FYUV420RGBgl.h;0;4
+FILE_NAME_13=573;C++;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSTMediaPlayer.h;0;4
+FILE_NAME_14=322;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FDesktop%2FC%2FVSHost.cairo.pi%2FVSTMediaPlayer.c;0;4
 
 [VTE]
 last_dir=/home/pi/Desktop/C/Cover.cairo.pi
 
 [build-menu]
 CFT_00_LB=_Derle
-CFT_00_CM=gcc -Wall -c "%f" -std=c99 -DUSE_OPENGL -DUSE_EGL -DIS_RPI -DSTANDALONE -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DTARGET_POSIX -D_LINUX -fPIC -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -U_FORTIFY_SOURCE -g -ftree-vectorize -pipe -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST -DUSE_VCHIQ_ARM -Wno-psabi -mcpu=cortex-a53 -mfloat-abi=hard -mfpu=neon-fp-armv8 -mneon-for-64bits $(pkg-config --cflags gtk+-3.0) -I/opt/vc/include/ -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/interface/vmcs_host/linux -Wno-deprecated-declarations
+CFT_00_CM=gcc -Wall -c "%f" -std=c99 -DUSE_OPENGL -DUSE_EGL -DIS_RPI -DSTANDALONE -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DTARGET_POSIX -D_LINUX -fPIC -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -U_FORTIFY_SOURCE -g -ftree-vectorize -pipe -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST -DUSE_VCHIQ_ARM -Wno-psabi -mcpu=cortex-a53 -mfloat-abi=hard -mfpu=neon-fp-armv8 $(pkg-config --cflags gtk+-3.0) -I/opt/vc/include/ -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/interface/vmcs_host/linux -Wno-deprecated-declarations
 CFT_00_WD=
 CFT_01_LB=İn_şa Et
-CFT_01_CM=gcc -Wall -o "%e" "%f" AudioDev.o AudioMic.o AudioMixer.o AudioPipeNB.o AudioSpk.o AudioEncoder.o PulseAudio.o VideoQueue.o VSEffect.o VSJam.o VSTMediaPlayer.o VStudio.o VSTVideoPlayer.o YUV420RGBgl.o -D_POSIX_C_SOURCE=199309L $(pkg-config --cflags gtk+-3.0) -Wl,--whole-archive -I/opt/vc/include -L/opt/vc/lib/ -lGLESv2 -lEGL -lbcm_host -lvchiq_arm -lpthread -lrt -ldl -lm -Wl,--no-whole-archive -rdynamic $(pkg-config --libs gtk+-3.0) $(pkg-config --libs libavcodec libavformat libavutil libswscale) -lasound $(pkg-config --libs sqlite3) -lpulse
+CFT_01_CM=gcc -Wall -o "%e" "%f" AudioDev.o AudioMic.o AudioMixer.o AudioPipeNB.o AudioSpk.o AudioEncoder.o PulseAudio.o VideoQueue.o VSEffect.o VSJam.o VSTMediaPlayer.o VStudio.o VSTVideoPlayer.o YUV420RGBgl.o -D_POSIX_C_SOURCE=199309L $(pkg-config --cflags gtk+-3.0) -Wl,--whole-archive -I/opt/vc/include -L/opt/vc/lib/ -lGLESv2 -lEGL -lX11 -lbcm_host -lvchiq_arm -lpthread -lrt -ldl -lm -Wl,--no-whole-archive -rdynamic $(pkg-config --libs gtk+-3.0) $(pkg-config --libs libavcodec libavformat libavutil libswscale libswresample) -lasound $(pkg-config --libs sqlite3) -lpulse
 CFT_01_WD=
 filetypes=C;
 NF_00_LB=_Derle
@@ -61,3 +66,8 @@ NF_03_WD=
 EX_00_LB=_Çalıştır
 EX_00_CM=sudo "./%e"
 EX_00_WD=
+
+[editor]
+line_wrapping=false
+line_break_column=72
+auto_continue_multiline=true
